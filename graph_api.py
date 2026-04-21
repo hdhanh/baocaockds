@@ -214,35 +214,78 @@ def upload_anh(username: str, file_obj) -> str:
 
 
 # -------------------------------------------------------
-# GỬI BÁO CÁO (POST vào ckds_baocao)
+# KIỂM TRA BÁO CÁO THEO NGÀY
+# Trả về dict {congviec: item_id} cho ngày đã chọn
+# -------------------------------------------------------
+def kiem_tra_bao_cao_ngay(username: str, ngay: str) -> dict:
+    """
+    ngay: chuỗi YYYY-MM-DD
+    Trả về {congviec: item_id} — dùng để biết bản ghi nào cần PATCH.
+    """
+    url = (
+        f"{BASE_URL}/lists/{LIST_BAOCAO}/items"
+        f"?$expand=fields&$top=999"
+    )
+    try:
+        items = requests.get(url, headers=_headers(), timeout=10).json().get("value", [])
+    except Exception:
+        return {}
+
+    result = {}
+    for item in items:
+        f    = item.get("fields", {})
+        user = str(f.get("User") or f.get("user") or "").strip()
+        if user.lower() != username.lower():
+            continue
+        # Lấy phần ngày từ ngaybc (YYYY-MM-DD...)
+        ngaybc = str(f.get("ngaybc") or "")[:10]
+        if ngaybc == ngay:
+            cv = f.get("congviec", "")
+            if cv:
+                result[cv] = item["id"]
+    return result
+
+
+# -------------------------------------------------------
+# GỬI BÁO CÁO — POST (mới) hoặc PATCH (ghi đè)
 # -------------------------------------------------------
 def gui_bao_cao(username: str, congviec: str, khoiluong: float,
-                note: str, img_urls: list) -> bool:
+                ngay: str, note: str, img_urls: list,
+                item_id: str = None) -> bool:
     """
-    img_urls: list tối đa 9 URL ảnh (có thể ít hơn).
-    Trả về True nếu thành công.
+    item_id : nếu có → PATCH (cập nhật bản ghi cũ)
+              nếu None → POST (tạo mới)
+    img_urls: list tối đa 9 URL ảnh
     """
-    url  = f"{BASE_URL}/lists/{LIST_BAOCAO}/items"
-    ngay = datetime.now().strftime("%Y%m%d_%H%M")
+    ngay_id  = ngay.replace("-", "")
+    now_time = datetime.utcnow().strftime("T%H:%M:%SZ")
+    ngaybc   = f"{ngay}{now_time}"
 
     fields = {
-        "Title":      f"BC_{ngay}_{username}",
+        "Title":      f"BC_{ngay_id}_{username}_{congviec}",
         "User":       username,
-        "ngaybc":     datetime.utcnow().isoformat() + "Z",
+        "ngaybc":     ngaybc,
         "congviec":   congviec,
         "khoiluong":  khoiluong,
         "note":       note,
     }
-
-    # Gán từng URL vào img1, img2,... (chỉ gán nếu có ảnh)
     for i, url_anh in enumerate(img_urls[:9]):
         if url_anh:
             fields[f"img{i+1}"] = url_anh
 
     try:
-        res = requests.post(url, headers=_headers(),
-                            json={"fields": fields}, timeout=15)
-        return res.status_code == 201
+        if item_id:
+            # PATCH — cập nhật bản ghi cũ
+            url = f"{BASE_URL}/lists/{LIST_BAOCAO}/items/{item_id}/fields"
+            res = requests.patch(url, headers=_headers(),
+                                 json=fields, timeout=15)
+            return res.status_code == 200
+        else:
+            # POST — tạo mới
+            url = f"{BASE_URL}/lists/{LIST_BAOCAO}/items"
+            res = requests.post(url, headers=_headers(),
+                                json={"fields": fields}, timeout=15)
+            return res.status_code == 201
     except Exception:
         return False
 
