@@ -121,23 +121,31 @@ def lay_cong_viec(username: str) -> list:
     """
     Trả về list các công việc được giao, mỗi item gồm:
     congviec, kl_giao, ngaygiao, description, Total_No
+    Không dùng $filter vì 'user' là từ khóa OData — lọc trong Python.
     """
     url = (
         f"{BASE_URL}/lists/{LIST_KLGIAO}/items"
-        f"?$filter=fields/user eq '{username}'"
-        f"&$select=fields/user,fields/congviec,fields/kl_giao,fields/ngaygiao"
-        f"&$expand=fields&$top=999"
+        f"?$expand=fields&$top=999"
     )
     try:
-        items = requests.get(url, headers=_headers(), timeout=10).json().get("value", [])
-    except Exception:
+        res   = requests.get(url, headers=_headers(), timeout=10)
+        items = res.json().get("value", [])
+        print(f"[KLGIAO] Tổng số bản ghi: {len(items)}")
+    except Exception as e:
+        print(f"[KLGIAO ERROR] {e}")
         return []
 
     hang_muc = _lay_hangmuc_all()
 
     result = []
     for item in items:
-        f  = item["fields"]
+        f    = item.get("fields", {})
+        user = str(f.get("user") or f.get("User") or "").strip()
+        print(f"[KLGIAO] user='{user}' | congviec='{f.get('congviec')}'")
+
+        if user.lower() != username.lower():
+            continue
+
         cv = f.get("congviec", "")
         hm = hang_muc.get(cv, {})
         result.append({
@@ -147,6 +155,8 @@ def lay_cong_viec(username: str) -> list:
             "description": hm.get("description", cv),
             "Total_No":    float(hm.get("Total_No") or 0),
         })
+
+    print(f"[KLGIAO] Tìm thấy {len(result)} CV cho user '{username}'")
     return result
 
 
@@ -155,11 +165,13 @@ def lay_cong_viec(username: str) -> list:
 # Trả về dict {congviec: tổng_khoiluong}
 # -------------------------------------------------------
 def tinh_da_baocao(username: str) -> dict:
+    """
+    Trả về {congviec: tổng_khoiluong}.
+    Không dùng $filter vì 'User' là từ khóa OData — lọc trong Python.
+    """
     url = (
         f"{BASE_URL}/lists/{LIST_BAOCAO}/items"
-        f"?$filter=fields/User eq '{username}'"
-        f"&$select=fields/congviec,fields/khoiluong"
-        f"&$expand=fields&$top=999"
+        f"?$expand=fields&$top=999"
     )
     try:
         items = requests.get(url, headers=_headers(), timeout=10).json().get("value", [])
@@ -168,7 +180,10 @@ def tinh_da_baocao(username: str) -> dict:
 
     tong = {}
     for item in items:
-        f  = item["fields"]
+        f    = item.get("fields", {})
+        user = str(f.get("User") or f.get("user") or "").strip()
+        if user.lower() != username.lower():
+            continue
         cv = f.get("congviec", "")
         kl = float(f.get("khoiluong") or 0)
         tong[cv] = tong.get(cv, 0) + kl
