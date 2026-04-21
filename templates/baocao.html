@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo — {{ full_name }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+
+    .topbar {
+      background: #1a2744; color: #fff;
+      padding: 12px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+    }
+    .topbar .name     { font-weight: 700; font-size: 1rem; }
+    .topbar .position { font-size: .78rem; color: #f4a01c; margin-top: 2px; }
+    .topbar-right { display: flex; gap: 8px; align-items: center; }
+    .btn-back {
+      background: transparent; border: 1px solid rgba(255,255,255,.35);
+      color: #fff; font-size: .8rem; padding: 5px 14px;
+      border-radius: 20px; text-decoration: none;
+    }
+    .btn-back:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+    /* HEADER NGÀY */
+    .date-header {
+      background: #fff; margin: 14px 12px 0;
+      border-radius: 12px; padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+    }
+    .date-header .fg { flex: 1; min-width: 160px; }
+    .date-header label {
+      font-size: .75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px;
+      color: #6b7280; display: block; margin-bottom: 5px;
+    }
+    .date-header input[type=date] {
+      width: 100%; border: 1.5px solid #dde1e9;
+      border-radius: 8px; padding: 9px 12px;
+      font-size: .95rem; font-weight: 600; color: #1a2744;
+      background: #f8f9fb; outline: none;
+    }
+    .date-header input[type=date]:focus { border-color: #f4a01c; background: #fff; }
+
+    /* Banner cảnh báo ghi đè */
+    #overwrite-banner {
+      display: none;
+      background: #fff8e1; border: 1.5px solid #f4a01c;
+      border-radius: 10px; margin: 10px 12px 0;
+      padding: 10px 14px; font-size: .85rem; color: #7c4f00;
+    }
+    #overwrite-banner strong { color: #d4880f; }
+
+    /* Ghi chú TimeMark */
+    .timemark-note {
+      background: #e8f4fd; border-left: 4px solid #3b82f6;
+      border-radius: 0 10px 10px 0;
+      margin: 10px 12px 0; padding: 10px 14px;
+      font-size: .82rem; color: #1e40af;
+    }
+
+    .section-title {
+      font-size: .75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      color: #8a94a6; padding: 16px 16px 8px;
+    }
+    .alert-area { padding: 10px 12px 0; }
+    .alert { border-radius: 10px; font-size: .9rem; }
+
+    .table-wrap {
+      margin: 0 12px; background: #fff;
+      border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 380px; }
+    .tbl thead tr { background: #1a2744; color: #fff; }
+    .tbl thead th {
+      padding: 11px 12px; font-weight: 600;
+      font-size: .75rem; text-transform: uppercase;
+      letter-spacing: .5px; white-space: nowrap; border: none;
+    }
+    .tbl tbody tr { border-bottom: 1px solid #f0f2f5; }
+    .tbl tbody tr:last-child { border-bottom: none; }
+    .tbl tbody tr:hover { background: #fafbfc; }
+    .tbl td { padding: 10px 12px; vertical-align: middle; }
+
+    .ma-cv  { font-weight: 700; color: #1a2744; font-size: .82rem; white-space: nowrap; }
+    .ten-cv { color: #4b5563; font-size: .83rem; }
+
+    /* Badge "đã báo cáo" */
+    .tag-reported {
+      background: #fff8e1; color: #d4880f;
+      font-size: .72rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 20px;
+      border: 1px solid #f4a01c;
+      display: inline-block; margin-top: 3px;
+    }
+
+    .kl-input {
+      width: 85px; border: 1.5px solid #dde1e9;
+      border-radius: 7px; padding: 7px 8px;
+      font-size: .9rem; font-weight: 600;
+      color: #1a2744; text-align: right; outline: none; display: block;
+    }
+    .kl-input:focus { border-color: #f4a01c; }
+
+    .btn-send {
+      background: #f4a01c; border: none; color: #fff;
+      font-weight: 700; font-size: .78rem;
+      padding: 7px 14px; border-radius: 7px;
+      white-space: nowrap; cursor: pointer; transition: background .2s;
+    }
+    .btn-send:hover { background: #d4880f; }
+    .btn-send.update { background: #3b82f6; }
+    .btn-send.update:hover { background: #2563eb; }
+
+    .empty-state { text-align: center; padding: 50px 20px; color: #9ca3af; }
+
+    /* MODAL */
+    .modal-content { border-radius: 16px; overflow: hidden; }
+    .modal-header  { background: #1a2744; color: #fff; padding: 14px 18px; border: none; }
+    .modal-header .btn-close { filter: invert(1) opacity(.7); }
+    .modal-title   { font-weight: 700; font-size: .95rem; }
+    .modal-body    { padding: 16px 18px 0; }
+    .modal-footer  { border: none; padding: 14px 18px 18px; }
+    .form-label    { font-weight: 600; font-size: .85rem; color: #374151; margin-bottom: 4px; }
+    .form-control  { font-size: .92rem; padding: 9px 12px; border-radius: 9px; border: 1.5px solid #dde1e9; }
+    .form-control:focus { border-color: #f4a01c; box-shadow: 0 0 0 3px rgba(244,160,28,.12); }
+    .form-control[readonly] { background: #f8f9fb; color: #6b7280; }
+
+    .info-box {
+      background: #f8f9fb; border-radius: 10px;
+      padding: 12px 14px; font-size: .87rem; margin-bottom: 14px;
+    }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-lbl { color: #6b7280; }
+    .info-val { font-weight: 700; color: #1a2744; }
+    .info-val.hl { color: #f4a01c; font-size: 1.05rem; }
+
+    /* Cảnh báo ghi đè trong modal */
+    .overwrite-warning {
+      display: none;
+      background: #fff8e1; border: 1.5px solid #f4a01c;
+      border-radius: 9px; padding: 9px 12px;
+      font-size: .83rem; color: #7c4f00; margin-bottom: 12px;
+    }
+
+    .btn-submit {
+      background: #f4a01c; color: #fff; font-weight: 700;
+      border: none; width: 100%; padding: 12px;
+      border-radius: 10px; font-size: .95rem;
+    }
+    .btn-submit:hover { background: #d4880f; color: #fff; }
+    .btn-submit.update-mode { background: #3b82f6; }
+    .btn-submit.update-mode:hover { background: #2563eb; }
+
+    .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+    .img-box {
+      aspect-ratio: 1; border-radius: 8px;
+      border: 2px dashed #dde1e9;
+      position: relative; background: #f8f9fb;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .img-box img { width:100%; height:100%; object-fit:cover; display:none; }
+    .img-box .ph { font-size: 1.4rem; color: #ccc; pointer-events: none; }
+    .img-box input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="name">👷 {{ full_name }}</div>
+    <div class="position">{{ position }}</div>
+  </div>
+  <div class="topbar-right">
+    <a href="/dashboard" class="btn-back">← Tổng quan</a>
+  </div>
+</div>
+
+<div class="alert-area">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show mb-0">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<!-- CHỌN NGÀY -->
+<div class="date-header">
+  <div class="fg">
+    <label>📅 Ngày báo cáo</label>
+    <input type="date" id="global_ngay" value="{{ today }}" onchange="checkNgay()">
+  </div>
+</div>
+
+<!-- BANNER GHI ĐÈ -->
+<div id="overwrite-banner">
+  ⚠️ Ngày này đã có báo cáo. Nếu gửi lại, dữ liệu cũ sẽ bị <strong>ghi đè</strong>.
+</div>
+
+<!-- GHI CHÚ TIMEMARK -->
+<div class="timemark-note">
+  📸 Sử dụng phần mềm <strong>TimeMark</strong> để chụp ảnh có nhãn thời gian.
+</div>
+
+<div class="section-title">📝 Nhập khối lượng thi công</div>
+
+{% if cong_viec %}
+<div class="table-wrap">
+  <div class="table-scroll">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Mã CV</th>
+          <th>Công việc</th>
+          <th style="text-align:right">KL hôm nay</th>
+          <th style="text-align:center"> </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cv in cong_viec %}
+        <tr id="row_{{ cv.congviec }}">
+          <td>
+            <div class="ma-cv">{{ cv.congviec }}</div>
+            <div class="tag-reported" id="tag_{{ cv.congviec }}" style="display:none">
+              🔄 Đã báo cáo
+            </div>
+          </td>
+          <td><div class="ten-cv">{{ cv.description }}</div></td>
+          <td>
+            <input type="number" class="kl-input" id="kl_{{ cv.congviec }}"
+                   step="0.1" min="0.1" placeholder="0">
+          </td>
+          <td style="text-align:center">
+            <button class="btn-send" id="btn_{{ cv.congviec }}"
+                    onclick="moModal('{{ cv.congviec }}','{{ cv.description|replace("'","\\'") }}')">
+              📤 Gửi
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <div style="font-size:2.5rem">🎉</div>
+  <div>Tất cả công việc đã hoàn thành!</div>
+</div>
+{% endif %}
+
+
+<!-- MODAL BÁO CÁO -->
+<div class="modal fade" id="modalBC" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">📤 Xác nhận báo cáo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/gui_bao_cao" enctype="multipart/form-data" id="formBC">
+        <input type="hidden" name="congviec"  id="m_cv">
+        <input type="hidden" name="khoiluong" id="m_kl">
+        <input type="hidden" name="ngay"      id="m_ngay">
+        <input type="hidden" name="item_id"   id="m_item_id">
+
+        <div class="modal-body">
+
+          <!-- Cảnh báo ghi đè -->
+          <div class="overwrite-warning" id="modalOverwrite">
+            ⚠️ <strong>Ghi đè:</strong> Ngày này đã có dữ liệu cho công việc này. Nhấn xác nhận để cập nhật.
+          </div>
+
+          <!-- Tóm tắt -->
+          <div class="info-box">
+            <div class="info-row">
+              <span class="info-lbl">Công việc</span>
+              <span class="info-val" id="m_ten"></span>
+            </div>
+            <div class="info-row">
+              <span class="info-lbl">Ngày</span>
+              <span class="info-val" id="m_ngay_disp"></span>
+            </div>
+            <div class="info-row">
+              <span class="info-lbl">Khối lượng</span>
+              <span class="info-val hl" id="m_kl_disp"></span>
+            </div>
+          </div>
+
+          <!-- Ghi chú -->
+          <div class="mb-3">
+            <label class="form-label">Ghi chú <span class="text-muted fw-normal">(tùy chọn)</span></label>
+            <textarea name="note" id="m_note" class="form-control" rows="2"
+                      placeholder="Khó khăn, vật liệu, thời tiết..."></textarea>
+          </div>
+
+          <!-- Ảnh -->
+          <div class="mb-3">
+            <label class="form-label">📷 Ảnh <span class="text-muted fw-normal">(tối đa 9)</span></label>
+            <div class="img-grid">
+              {% for i in range(1, 10) %}
+              <div class="img-box" id="box{{ i }}">
+                <div class="ph">+</div>
+                <img id="prev{{ i }}" src="" alt="">
+                <input type="file" name="img{{ i }}" accept="image/*" capture="environment"
+                       onchange="previewImg({{ i }}, this)">
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-submit" id="btnSubmit">✅ Xác nhận gửi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Lưu kết quả kiểm tra ngày hiện tại: {congviec: item_id}
+  let existingData = {};
+
+  // Kiểm tra ngày khi load trang và khi thay đổi
+  async function checkNgay() {
+    const ngay = document.getElementById("global_ngay").value;
+    if (!ngay) return;
+
+    try {
+      const res  = await fetch(`/api/check_ngay?ngay=${ngay}`);
+      existingData = await res.json();
+    } catch { existingData = {}; }
+
+    const hasAny = Object.keys(existingData).length > 0;
+
+    // Hiện/ẩn banner ghi đè tổng
+    document.getElementById("overwrite-banner").style.display = hasAny ? "block" : "none";
+
+    // Cập nhật badge + nút từng dòng
+    {% for cv in cong_viec %}
+    const ma_{{ loop.index }} = "{{ cv.congviec }}";
+    const tag_{{ loop.index }} = document.getElementById("tag_" + ma_{{ loop.index }});
+    const btn_{{ loop.index }} = document.getElementById("btn_" + ma_{{ loop.index }});
+    if (existingData[ma_{{ loop.index }}]) {
+      tag_{{ loop.index }}.style.display = "inline-block";
+      btn_{{ loop.index }}.textContent = "🔄 Cập nhật";
+      btn_{{ loop.index }}.classList.add("update");
+    } else {
+      tag_{{ loop.index }}.style.display = "none";
+      btn_{{ loop.index }}.textContent = "📤 Gửi";
+      btn_{{ loop.index }}.classList.remove("update");
+    }
+    {% endfor %}
+  }
+
+  function moModal(maCv, tenCv) {
+    const kl   = parseFloat(document.getElementById("kl_" + maCv)?.value || 0);
+    const ngay = document.getElementById("global_ngay").value;
+
+    if (!kl || kl <= 0) {
+      alert("Vui lòng nhập khối lượng thi công hôm nay!");
+      document.getElementById("kl_" + maCv)?.focus();
+      return;
+    }
+    if (!ngay) { alert("Vui lòng chọn ngày!"); return; }
+
+    const itemId   = existingData[maCv] || "";
+    const isUpdate = !!itemId;
+
+    document.getElementById("m_cv").value      = maCv;
+    document.getElementById("m_kl").value      = kl;
+    document.getElementById("m_ngay").value    = ngay;
+    document.getElementById("m_item_id").value = itemId;
+
+    document.getElementById("m_ten").textContent      = `${tenCv} (${maCv})`;
+    document.getElementById("m_ngay_disp").textContent = ngay;
+    document.getElementById("m_kl_disp").textContent   = kl;
+
+    // Hiện/ẩn cảnh báo ghi đè trong modal
+    document.getElementById("modalOverwrite").style.display = isUpdate ? "block" : "none";
+
+    // Đổi màu nút submit
+    const btnS = document.getElementById("btnSubmit");
+    if (isUpdate) {
+      btnS.textContent = "🔄 Xác nhận cập nhật";
+      btnS.classList.add("update-mode");
+      document.getElementById("modalTitle").textContent = "🔄 Cập nhật báo cáo";
+    } else {
+      btnS.textContent = "✅ Xác nhận gửi";
+      btnS.classList.remove("update-mode");
+      document.getElementById("modalTitle").textContent = "📤 Xác nhận báo cáo";
+    }
+
+    // Reset ảnh & ghi chú
+    document.getElementById("m_note").value = "";
+    for (let i = 1; i <= 9; i++) {
+      document.querySelector(`#box${i} input`).value = "";
+      const img = document.getElementById("prev" + i);
+      img.src = ""; img.style.display = "none";
+      document.querySelector(`#box${i} .ph`).style.display = "";
+    }
+
+    new bootstrap.Modal(document.getElementById("modalBC")).show();
+  }
+
+  function previewImg(idx, input) {
+    if (!input.files?.[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById("prev" + idx);
+      img.src = e.target.result; img.style.display = "block";
+      document.querySelector(`#box${idx} .ph`).style.display = "none";
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  document.getElementById("formBC").addEventListener("submit", () => {
+    const btn = document.getElementById("btnSubmit");
+    btn.disabled = true;
+    btn.textContent = "⏳ Đang gửi...";
+  });
+
+  // Kiểm tra ngày khi trang load
+  checkNgay();
+</script>
+</body>
+</html>
