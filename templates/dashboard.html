@@ -7,7 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
-    body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+    body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; padding-bottom: 100px; }
 
     .topbar {
       background: #1a2744; color: #fff;
@@ -18,20 +18,33 @@
     }
     .topbar .name     { font-weight: 700; font-size: 1rem; }
     .topbar .position { font-size: .78rem; color: #f4a01c; margin-top: 2px; }
-    .topbar-right { display: flex; gap: 8px; align-items: center; }
     .btn-logout {
       background: transparent; border: 1px solid rgba(255,255,255,.35);
       color: #fff; font-size: .8rem; padding: 5px 14px;
       border-radius: 20px; text-decoration: none;
     }
     .btn-logout:hover { background: rgba(255,255,255,.12); color: #fff; }
-    .btn-baocao {
-      background: #f4a01c; border: none; color: #fff;
-      font-weight: 700; font-size: .82rem;
-      padding: 6px 16px; border-radius: 20px;
-      text-decoration: none; white-space: nowrap;
+
+    /* NÚT BÁO CÁO FLOAT */
+    .fab-baocao {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      background: #f4a01c;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.05rem;
+      padding: 16px 48px;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 6px 24px rgba(244,160,28,.5);
+      white-space: nowrap;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      letter-spacing: .3px;
     }
-    .btn-baocao:hover { background: #d4880f; color: #fff; }
+    .fab-baocao:hover  { background: #d4880f; color: #fff; box-shadow: 0 8px 28px rgba(244,160,28,.6); }
+    .fab-baocao:active { transform: translateX(-50%) scale(.96); }
 
     .section-title {
       font-size: .75rem; font-weight: 700;
@@ -42,12 +55,11 @@
     .alert { border-radius: 10px; font-size: .9rem; }
 
     .table-wrap {
-      margin: 0 12px;
-      background: #fff; border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden;
+      margin: 0 12px; background: #fff;
+      border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden;
     }
     .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .tbl { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 440px; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 420px; }
     .tbl thead tr { background: #1a2744; color: #fff; }
     .tbl thead th {
       padding: 11px 12px; font-weight: 600;
@@ -66,7 +78,6 @@
     .c-green{ color: #28a745; }
     .c-gray { color: #9ca3af; }
 
-    /* Mini progress bar */
     .prog-wrap { width: 60px; height: 6px; background: #e9ecef; border-radius: 6px; display:inline-block; }
     .prog-bar  { height: 6px; border-radius: 6px; background: #f4a01c; }
     .prog-bar.done { background: #28a745; }
@@ -82,10 +93,7 @@
     <div class="name">👷 {{ full_name }}</div>
     <div class="position">{{ position }}</div>
   </div>
-  <div class="topbar-right">
-    <a href="/baocao" class="btn-baocao">📝 Báo cáo</a>
-    <a href="/logout" class="btn-logout">Đăng xuất</a>
-  </div>
+  <a href="/logout" class="btn-logout">Đăng xuất</a>
 </div>
 
 <div class="alert-area">
@@ -153,6 +161,9 @@
   <div>Chưa có công việc nào được giao.</div>
 </div>
 {% endif %}
+
+<!-- NÚT FLOAT BÁO CÁO -->
+<a href="/baocao" class="fab-baocao">📝 Báo cáo hôm nay</a>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
