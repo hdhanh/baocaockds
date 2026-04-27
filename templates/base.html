@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>{% block title %}CKDS{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --c-xuat:  #10522d;
+      --c-nhap:  #1a2744;
+      --c-accent:#f4a01c;
+      --c-bg:    #f5f7fa;
+      --c-card:  #ffffff;
+      --radius:  14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--c-bg);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 30px;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100%;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      background: {% block topbar_color %}#1a2744{% endblock %};
+      color: #fff;
+    }
+    .topbar .btn-back {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      line-height: 1;
+      padding: 4px 10px;
+      border-radius: 8px;
+      transition: background .15s;
+    }
+    .topbar .btn-back:hover { background: rgba(255,255,255,.15); }
+    .topbar .topbar-title {
+      flex: 1;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topbar .btn-add {
+      background: #fff;
+      border: none;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: opacity .15s;
+    }
+    .topbar .btn-add:hover { opacity: .85; }
+
+    /* ── CARD ── */
+    .card-item {
+      background: var(--c-card);
+      border-radius: var(--radius);
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: box-shadow .15s, transform .1s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .card-item:hover {
+      box-shadow: 0 4px 14px rgba(0,0,0,.13);
+      transform: translateY(-1px);
+    }
+
+    /* ── TABLE ── */
+    .tbl-rows {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: .9rem;
+    }
+    .tbl-rows thead th {
+      background: #f0f2f5;
+      padding: 8px 10px;
+      font-weight: 600;
+      color: #555;
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .tbl-rows tbody tr:nth-child(even) td { background: #fafafa; }
+    .tbl-rows td { padding: 9px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+
+    /* ── FORM ── */
+    .form-label { font-weight: 600; font-size: .88rem; color: #444; margin-bottom: 4px; }
+    .form-control, .form-select {
+      border-radius: 9px;
+      border: 1.5px solid #dde1e9;
+      font-size: .95rem;
+      padding: 9px 12px;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--c-accent);
+      box-shadow: 0 0 0 3px rgba(244,160,28,.18);
+    }
+    .form-control[readonly] { background: #f5f7fa; color: #888; }
+
+    /* ── BADGE ── */
+    .badge-so-dong {
+      background: #eef2ff;
+      color: #4361ee;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: .78rem;
+      font-weight: 600;
+    }
+
+    /* ── FLASH ── */
+    .flash-wrap { padding: 10px 14px 0; }
+    .alert { border-radius: 10px; font-size: .9rem; padding: 10px 14px; }
+
+    /* ── BTN ── */
+    .btn-main {
+      background: {% block btn_color %}#1a2744{% endblock %};
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 13px;
+      width: 100%;
+      transition: opacity .15s;
+    }
+    .btn-main:hover { opacity: .88; color: #fff; }
+    .btn-main:disabled { background: #bbb; }
+
+    .btn-outline-action {
+      border-radius: 9px;
+      font-weight: 600;
+      font-size: .88rem;
+      padding: 7px 18px;
+    }
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  {% block topbar_left %}
+  <a href="{{ url_for('hub') }}" class="btn-back">←</a>
+  {% endblock %}
+  <span class="topbar-title">{% block topbar_title %}CKDS{% endblock %}</span>
+  {% block topbar_right %}{% endblock %}
+</div>
+
+<!-- FLASH MESSAGES -->
+<div class="flash-wrap">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show mb-2">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<!-- CONTENT -->
+<div class="px-3 pt-2">
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

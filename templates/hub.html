@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>CKDS — Trang Chủ</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { min-height:100vh; background:linear-gradient(160deg,#10522d 0%,#1a2744 100%);
+           display:flex; flex-direction:column; font-family:'Segoe UI',sans-serif; }
+    .header { padding:28px 20px 16px; color:#fff; }
+    .header h2 { font-size:1.1rem; font-weight:400; opacity:.75; margin:0; }
+    .header h1 { font-size:1.65rem; font-weight:800; margin:4px 0 0; }
+    .content { flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; }
+    .hub-btn {
+      display:flex; align-items:center; gap:18px;
+      background:rgba(255,255,255,.12); border:2px solid rgba(255,255,255,.2);
+      border-radius:20px; padding:24px 22px; text-decoration:none;
+      color:#fff; transition:all .18s; backdrop-filter:blur(6px);
+    }
+    .hub-btn:hover { background:rgba(255,255,255,.22); transform:translateY(-2px);
+                     box-shadow:0 8px 24px rgba(0,0,0,.25); color:#fff; }
+    .hub-btn .icon { font-size:2.6rem; line-height:1; }
+    .hub-btn .label h3 { font-size:1.35rem; font-weight:800; margin:0; }
+    .hub-btn .label p  { font-size:.85rem; opacity:.75; margin:4px 0 0; }
+    .hub-btn.xuat { border-color:rgba(100,255,160,.35); }
+    .hub-btn.nhap { border-color:rgba(100,140,255,.35); }
+    .footer { padding:20px; text-align:center; }
+    .footer a { color:rgba(255,255,255,.5); font-size:.82rem; text-decoration:none; }
+    .footer a:hover { color:#fff; }
+    .user-chip { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.12);
+                 border-radius:30px; padding:6px 14px; margin-top:10px; font-size:.85rem; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h2>Xin chào,</h2>
+  <h1>{{ full_name }}</h1>
+  <div class="user-chip">👤 {{ position }}</div>
+</div>
+
+<div class="content">
+  <a href="{{ url_for('danhsach_xuat') }}" class="hub-btn xuat">
+    <span class="icon">📤</span>
+    <div class="label">
+      <h3>PHIẾU XUẤT</h3>
+      <p>Xem, tạo và quản lý phiếu xuất</p>
+    </div>
+  </a>
+  <a href="{{ url_for('danhsach_nhap') }}" class="hub-btn nhap">
+    <span class="icon">📥</span>
+    <div class="label">
+      <h3>PHIẾU NHẬP</h3>
+      <p>Xem, tạo và quản lý phiếu nhập</p>
+    </div>
+  </a>
+</div>
+
+<div class="footer">
+  <a href="{{ url_for('logout') }}">⎋ Đăng xuất</a>
+</div>
+</body>
+</html>
