@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% set title_text = "Tạo Phiếu Xuất" if mode=="create" else "Sửa Phiếu Xuất #" ~ sophieu %}
+{% block title %}{{ title_text }}{% endblock %}
+{% block topbar_color %}{{ cfg.color }}{% endblock %}
+{% block btn_color %}{{ cfg.color }}{% endblock %}
+{% block topbar_left %}
+  {% if mode=="create" %}
+    <a href="{{ url_for('danhsach_xuat') }}" class="btn-back">←</a>
+  {% else %}
+    <a href="{{ url_for('chitiet_xuat', sophieu=sophieu) }}" class="btn-back">←</a>
+  {% endif %}
+{% endblock %}
+{% block topbar_title %}{{ title_text }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .row-card { background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;
+              box-shadow:0 2px 6px rgba(0,0,0,.07);position:relative; }
+  .row-card .btn-del-row { position:absolute;top:10px;right:12px;background:none;border:none;
+                            color:#e74c3c;font-size:1.1rem;cursor:pointer;padding:2px 6px; }
+  .row-num { font-size:.75rem;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:6px; }
+  .img-preview { width:100%;border-radius:10px;max-height:200px;object-fit:contain;
+                 background:#f5f7fa;margin-top:8px;display:none; }
+  .img-preview.show { display:block; }
+  .section-card { background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;
+                  box-shadow:0 2px 8px rgba(0,0,0,.07); }
+  .section-title { font-size:.78rem;font-weight:700;color:#888;text-transform:uppercase;
+                   letter-spacing:.05em;margin-bottom:10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" id="mainForm">
+  <input type="hidden" name="rows_json" id="rows_json">
+
+  <!-- Header phiếu -->
+  <div class="section-card">
+    <div class="section-title">Thông tin phiếu</div>
+    <div class="row g-2">
+      <div class="col-5">
+        <label class="form-label">Số phiếu</label>
+        <input type="number" name="sophieu" class="form-control" value="{{ sophieu }}" required
+               {% if mode=='edit' %}readonly{% endif %}>
+      </div>
+      <div class="col-7">
+        <label class="form-label">Ngày</label>
+        <input type="date" name="date" class="form-control" value="{{ today }}" required>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Ghi chú phiếu</label>
+        <input type="text" name="note" class="form-control" placeholder="(Tuỳ chọn)"
+               value="{{ rows[0].note if rows else '' }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Ảnh đính kèm -->
+  <div class="section-card">
+    <div class="section-title">Ảnh phiếu xuất (1 ảnh)</div>
+    {% if attachment and mode=='edit' %}
+    <div style="font-size:.82rem;color:#666;margin-bottom:8px;">
+      Ảnh hiện tại: <strong>{{ attachment.name }}</strong>
+      — chọn file mới để thay thế
+    </div>
+    {% endif %}
+    <input type="file" name="image" id="imageInput" class="form-control"
+           accept="image/*" capture="environment">
+    <img id="imgPreview" class="img-preview" alt="Xem trước ảnh">
+  </div>
+
+  <!-- Danh sách dòng -->
+  <div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="section-title mb-0">Danh sách cấu kiện</div>
+      <button type="button" class="btn btn-sm"
+              style="background:{{ cfg.color }};color:#fff;border-radius:8px;font-weight:700;"
+              onclick="themDong()">+ Thêm dòng</button>
+    </div>
+    <div id="rowsContainer"></div>
+  </div>
+
+  <button type="submit" class="btn-main" onclick="return submitForm()">
+    {{ "LƯU PHIẾU XUẤT" if mode=='create' else "CẬP NHẬT PHIẾU XUẤT" }}
+  </button>
+</form>
+
+<!-- Template 1 dòng -->
+<template id="rowTemplate">
+  <div class="row-card" data-idx="0">
+    <button type="button" class="btn-del-row" onclick="xoaDong(this)">🗑</button>
+    <div class="row-num">Dòng <span class="idx-label">1</span></div>
+    <input type="hidden" class="f-item-id" value="">
+    <div class="mb-2">
+      <label class="form-label mb-1">Mã cấu kiện <span style="color:red">*</span></label>
+      <input type="text" class="form-control f-code" list="hangmucList"
+             placeholder="Chọn hoặc gõ mã..." autocomplete="off"
+             oninput="autoFillDesc(this)">
+    </div>
+    <div class="mb-2">
+      <label class="form-label mb-1">Mô tả</label>
+      <input type="text" class="form-control f-desc" readonly placeholder="Tự động điền...">
+    </div>
+    <div class="row g-2">
+      <div class="col-5">
+        <label class="form-label mb-1">Số lượng <span style="color:red">*</span></label>
+        <input type="number" class="form-control f-qty" min="0" step="any" placeholder="0">
+      </div>
+      <div class="col-7">
+        <label class="form-label mb-1">Ghi chú dòng</label>
+        <input type="text" class="form-control f-note" placeholder="(Tuỳ chọn)">
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Datalist cấu kiện -->
+<datalist id="hangmucList"></datalist>
+
+{% block scripts %}
+<script>
+let hangmuc = [];
+let editRows = {{ rows | tojson }};
+const COLOR  = "{{ cfg.color }}";
+
+// Load cấu kiện
+fetch("/api/caukien").then(r=>r.json()).then(data=>{
+  hangmuc = data;
+  const dl = document.getElementById("hangmucList");
+  dl.innerHTML = data.map(h=>`<option value="${h.code}">${h.code} — ${h.description}</option>`).join("");
+});
+
+// Khởi tạo dòng có sẵn khi edit
+window.addEventListener("DOMContentLoaded", ()=>{
+  if(editRows && editRows.length){
+    editRows.forEach(r=>themDong(r));
+  } else {
+    themDong();
+  }
+});
+
+function themDong(data={}) {
+  const tmpl = document.getElementById("rowTemplate");
+  const el   = tmpl.content.cloneNode(true);
+  const card = el.querySelector(".row-card");
+  const cont = document.getElementById("rowsContainer");
+  cont.appendChild(card);
+  updateIdx();
+  if(data.item_id) card.querySelector(".f-item-id").value = data.item_id;
+  if(data.code)    card.querySelector(".f-code").value = data.code;
+  if(data.description) card.querySelector(".f-desc").value = data.description;
+  if(data.qty !== undefined) card.querySelector(".f-qty").value = data.qty;
+  if(data.note)    card.querySelector(".f-note").value = data.note;
+}
+
+function xoaDong(btn) {
+  const cards = document.querySelectorAll("#rowsContainer .row-card");
+  if(cards.length <= 1){ alert("Phiếu phải có ít nhất 1 dòng!"); return; }
+  btn.closest(".row-card").remove();
+  updateIdx();
+}
+
+function updateIdx() {
+  document.querySelectorAll("#rowsContainer .row-card").forEach((c,i)=>{
+    c.querySelector(".idx-label").textContent = i+1;
+  });
+}
+
+function autoFillDesc(input) {
+  const code = input.value.trim();
+  const card = input.closest(".row-card");
+  const hm   = hangmuc.find(h=>h.code===code);
+  card.querySelector(".f-desc").value = hm ? hm.description : "";
+}
+
+function submitForm() {
+  const rows = [];
+  let ok = true;
+  document.querySelectorAll("#rowsContainer .row-card").forEach(card=>{
+    const code = card.querySelector(".f-code").value.trim();
+    const qty  = card.querySelector(".f-qty").value;
+    if(!code){ ok=false; card.querySelector(".f-code").focus(); return; }
+    // Validate code có trong danh mục
+    if(hangmuc.length && !hangmuc.find(h=>h.code===code)){
+      alert(`Mã cấu kiện "${code}" không có trong danh mục!`);
+      ok=false; return;
+    }
+    rows.push({
+      item_id:     card.querySelector(".f-item-id").value,
+      code,
+      description: card.querySelector(".f-desc").value,
+      qty:         parseFloat(qty)||0,
+      note:        card.querySelector(".f-note").value,
+    });
+  });
+  if(!ok) return false;
+  if(!rows.length){ alert("Vui lòng thêm ít nhất 1 dòng!"); return false; }
+  document.getElementById("rows_json").value = JSON.stringify(rows);
+  return true;
+}
+
+// Preview ảnh
+document.getElementById("imageInput").addEventListener("change", function(){
+  const f = this.files[0]; if(!f) return;
+  const img = document.getElementById("imgPreview");
+  img.src = URL.createObjectURL(f);
+  img.classList.add("show");
+});
+</script>
+{% endblock %}

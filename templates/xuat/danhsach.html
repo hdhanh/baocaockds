@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Phiếu Xuất{% endblock %}
+{% block topbar_color %}{{ cfg.color }}{% endblock %}
+{% block btn_color %}{{ cfg.color }}{% endblock %}
+{% block topbar_title %}📤 Phiếu Xuất{% endblock %}
+{% block topbar_right %}
+  <a href="{{ url_for('tao_xuat') }}" class="btn-add" style="color:{{ cfg.color }}">+</a>
+{% endblock %}
+
+{% block content %}
+{% if phieu %}
+  {% for p in phieu %}
+  <a href="{{ url_for('chitiet_xuat', sophieu=p.sophieu) }}" class="card-item">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <div style="font-size:1.1rem;font-weight:700;color:{{ cfg.color }}">Phiếu #{{ p.sophieu }}</div>
+        <div style="font-size:.85rem;color:#888;margin-top:2px">📅 {{ p.date }}</div>
+      </div>
+      <div class="text-end">
+        <span class="badge-so-dong">{{ p.so_dong }} dòng</span>
+        <div style="font-size:1.1rem;color:#bbb;margin-top:4px">›</div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+{% else %}
+  <div class="text-center py-5" style="color:#bbb">
+    <div style="font-size:3rem">📋</div>
+    <p class="mt-2">Chưa có phiếu xuất nào.<br>Nhấn <strong>+</strong> để tạo mới.</p>
+  </div>
+{% endif %}
+{% endblock %}
