@@ -40,11 +40,26 @@ def _sp_headers(ct="application/json;odata=nometadata"):
             "Content-Type": ct}
 
 def _sp_list_url(list_name):
-    return f"{config.SHAREPOINT_SITE_URL}/_api/web/lists/getByTitle('{list_name}')"
+    base = (config.SHAREPOINT_SITE_URL or "").rstrip("/")
+    if not base or not base.startswith("http"):
+        raise ValueError(
+            "SHAREPOINT_SITE_URL chưa được cấu hình hoặc sai định dạng. "
+            f"Giá trị hiện tại: '{config.SHAREPOINT_SITE_URL}'. "
+            "Vui lòng set biến môi trường đúng dạng: https://tenant.sharepoint.com/sites/sitename"
+        )
+    return f"{base}/_api/web/lists/getByTitle('{list_name}')"
 
 def _safe_int(v):
     try: return int(float(str(v)))
     except: return 0
+
+def _fmt_sophieu(v) -> str:
+    """SharePoint lưu number field → tránh '111.0', trả về '111'."""
+    try:
+        f = float(str(v))
+        return str(int(f)) if f == int(f) else str(v)
+    except:
+        return str(v)
 
 def _fmt_date(raw):
     return str(raw or "")[:10]
@@ -135,7 +150,7 @@ def lay_danh_sach_phieu(list_key: str) -> list:
     groups = {}
     for item in items:
         f  = item.get("fields", {})
-        sp = str(f.get(cols["sophieu"], "")).strip()
+        sp = _fmt_sophieu(f.get(cols["sophieu"], "")).strip()
         if not sp: continue
         if sp not in groups:
             groups[sp] = {
@@ -167,8 +182,8 @@ def lay_chi_tiet_phieu(list_key: str, sophieu: str) -> list:
     rows = []
     for item in items:
         f  = item.get("fields", {})
-        sp = str(f.get(cols["sophieu"], "")).strip()
-        if sp != str(sophieu).strip(): continue
+        sp = _fmt_sophieu(f.get(cols["sophieu"], "")).strip()
+        if sp != _fmt_sophieu(sophieu).strip(): continue
         row = {
             "item_id":     item["id"],
             "sophieu":     sp,
@@ -194,8 +209,12 @@ def lay_chi_tiet_phieu(list_key: str, sophieu: str) -> list:
 def tao_dong(list_key: str, data: dict) -> str | None:
     cfg  = config.LISTS[list_key]
     cols = cfg["columns"]
+    # Lưu sophieu là số nguyên để tránh SharePoint lưu dạng float "111.0"
+    sp_val = data.get("sophieu", "")
+    try: sp_val = int(float(str(sp_val)))
+    except: pass
     fields = {
-        cols["sophieu"]:     str(data.get("sophieu", "")),
+        cols["sophieu"]:     sp_val,
         cols["date"]:        data.get("date", ""),
         cols["code"]:        str(data.get("code", "")),
         cols["description"]: str(data.get("description", "")),
