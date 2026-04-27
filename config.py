@@ -41,8 +41,8 @@ LISTS = {
             "date":        "date",
             "todoi":       "todoi",
             "fullname":    "fullname",
-            "code":        "code",
-            "description": "description",
+            "code":        "caukien",
+            "description": "fulldescription",
             "qty":         "qty",
             "note":        "note",
         }
