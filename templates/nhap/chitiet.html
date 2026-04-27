@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Phiếu Nhập #{{ sophieu }}{% endblock %}
+{% block topbar_color %}{{ cfg.color }}{% endblock %}
+{% block btn_color %}{{ cfg.color }}{% endblock %}
+{% block topbar_left %}
+  <a href="{{ url_for('danhsach_nhap') }}" class="btn-back">←</a>
+{% endblock %}
+{% block topbar_title %}📥 Phiếu Nhập #{{ sophieu }}{% endblock %}
+{% block topbar_right %}
+  <a href="{{ url_for('sua_nhap', sophieu=sophieu) }}"
+     style="color:#fff;font-size:.85rem;font-weight:700;padding:6px 10px;border:1.5px solid rgba(255,255,255,.5);
+            border-radius:8px;text-decoration:none;">Sửa</a>
+{% endblock %}
+
+{% block content %}
+<!-- Thông tin phiếu -->
+<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,.07);">
+  <div class="row g-2">
+    <div class="col-6">
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase">Số phiếu</div>
+      <div style="font-size:1.2rem;font-weight:800;color:{{ cfg.color }}">#{{ sophieu }}</div>
+    </div>
+    <div class="col-6">
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase">Ngày</div>
+      <div style="font-size:1rem;font-weight:600">{{ rows[0].date }}</div>
+    </div>
+    <div class="col-6">
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase">Tổ đội</div>
+      <div style="font-size:1rem;font-weight:700">{{ rows[0].todoi }}</div>
+    </div>
+    <div class="col-6">
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase">Tên tổ đội</div>
+      <div style="font-size:.95rem;">{{ rows[0].fullname }}</div>
+    </div>
+    {% if rows[0].note %}
+    <div class="col-12">
+      <div style="font-size:.78rem;color:#888;font-weight:600;text-transform:uppercase">Ghi chú</div>
+      <div style="font-size:.93rem;">{{ rows[0].note }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Bảng cấu kiện -->
+<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+  <div style="padding:12px 16px;border-bottom:1px solid #f0f0f0;font-weight:700;font-size:.95rem;">
+    Danh sách cấu kiện <span class="badge-so-dong ms-2">{{ rows|length }} dòng</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="tbl-rows">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã HM</th>
+          <th>Mô tả</th>
+          <th>SL</th>
+          <th>Ghi chú</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="color:#999;font-size:.8rem">{{ loop.index }}</td>
+          <td style="font-weight:600;white-space:nowrap">{{ r.code }}</td>
+          <td style="font-size:.88rem;color:#555">{{ r.description }}</td>
+          <td style="font-weight:600;text-align:right;white-space:nowrap">{{ r.qty }}</td>
+          <td style="font-size:.85rem;color:#888">{{ r.note }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('xoa_dong_nhap', item_id=r.item_id) }}"
+                  onsubmit="return confirm('Xóa dòng này?')">
+              <input type="hidden" name="sophieu" value="{{ sophieu }}">
+              <button type="submit" style="background:none;border:none;color:#e74c3c;font-size:1.1rem;cursor:pointer;padding:2px 4px;">🗑</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

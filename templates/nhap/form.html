@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% set title_text = "Tạo Phiếu Nhập" if mode=="create" else "Sửa Phiếu Nhập #" ~ sophieu %}
+{% block title %}{{ title_text }}{% endblock %}
+{% block topbar_color %}{{ cfg.color }}{% endblock %}
+{% block btn_color %}{{ cfg.color }}{% endblock %}
+{% block topbar_left %}
+  {% if mode=="create" %}
+    <a href="{{ url_for('danhsach_nhap') }}" class="btn-back">←</a>
+  {% else %}
+    <a href="{{ url_for('chitiet_nhap', sophieu=sophieu) }}" class="btn-back">←</a>
+  {% endif %}
+{% endblock %}
+{% block topbar_title %}{{ title_text }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .row-card { background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;
+              box-shadow:0 2px 6px rgba(0,0,0,.07);position:relative; }
+  .row-card .btn-del-row { position:absolute;top:10px;right:12px;background:none;border:none;
+                            color:#e74c3c;font-size:1.1rem;cursor:pointer;padding:2px 6px; }
+  .row-num { font-size:.75rem;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:6px; }
+  .section-card { background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;
+                  box-shadow:0 2px 8px rgba(0,0,0,.07); }
+  .section-title { font-size:.78rem;font-weight:700;color:#888;text-transform:uppercase;
+                   letter-spacing:.05em;margin-bottom:10px; }
+  .todoi-chip { display:inline-block;background:#eaecf5;border-radius:20px;
+                padding:4px 12px;font-size:.82rem;font-weight:600;color:#1a2744;margin-top:4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="mainForm">
+  <input type="hidden" name="rows_json" id="rows_json">
+
+  <!-- Header phiếu -->
+  <div class="section-card">
+    <div class="section-title">Thông tin phiếu</div>
+    <div class="row g-2">
+      <div class="col-5">
+        <label class="form-label">Số phiếu</label>
+        <input type="number" name="sophieu" class="form-control" value="{{ sophieu }}" required
+               {% if mode=='edit' %}readonly{% endif %}>
+      </div>
+      <div class="col-7">
+        <label class="form-label">Ngày</label>
+        <input type="date" name="date" class="form-control" value="{{ today }}" required>
+      </div>
+      <!-- Tổ đội (trước code) -->
+      <div class="col-12">
+        <label class="form-label">Tổ đội <span style="color:red">*</span></label>
+        <input type="text" name="todoi" id="todoi" class="form-control"
+               list="todoi_list" placeholder="Chọn hoặc gõ mã tổ đội..."
+               value="{{ todoi_val }}" autocomplete="off" oninput="autoFillFullname(this)" required>
+        <datalist id="todoi_list"></datalist>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Tên tổ đội</label>
+        <input type="text" name="fullname" id="fullname" class="form-control"
+               readonly placeholder="Tự động điền theo tổ đội..."
+               value="{{ fullname_val }}">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Ghi chú phiếu</label>
+        <input type="text" name="note" class="form-control" placeholder="(Tuỳ chọn)"
+               value="{{ rows[0].note if rows else '' }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Danh sách dòng -->
+  <div class="section-card">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="section-title mb-0">Danh sách cấu kiện</div>
+      <button type="button" class="btn btn-sm"
+              style="background:{{ cfg.color }};color:#fff;border-radius:8px;font-weight:700;"
+              onclick="themDong()">+ Thêm dòng</button>
+    </div>
+    <div id="rowsContainer"></div>
+  </div>
+
+  <button type="submit" class="btn-main" onclick="return submitForm()">
+    {{ "LƯU PHIẾU NHẬP" if mode=='create' else "CẬP NHẬT PHIẾU NHẬP" }}
+  </button>
+</form>
+
+<template id="rowTemplate">
+  <div class="row-card" data-idx="0">
+    <button type="button" class="btn-del-row" onclick="xoaDong(this)">🗑</button>
+    <div class="row-num">Dòng <span class="idx-label">1</span></div>
+    <input type="hidden" class="f-item-id" value="">
+    <div class="mb-2">
+      <label class="form-label mb-1">Mã cấu kiện <span style="color:red">*</span></label>
+      <input type="text" class="form-control f-code" list="hangmucList"
+             placeholder="Chọn hoặc gõ mã..." autocomplete="off"
+             oninput="autoFillDesc(this)">
+    </div>
+    <div class="mb-2">
+      <label class="form-label mb-1">Mô tả</label>
+      <input type="text" class="form-control f-desc" readonly placeholder="Tự động điền...">
+    </div>
+    <div class="row g-2">
+      <div class="col-5">
+        <label class="form-label mb-1">Số lượng <span style="color:red">*</span></label>
+        <input type="number" class="form-control f-qty" min="0" step="any" placeholder="0">
+      </div>
+      <div class="col-7">
+        <label class="form-label mb-1">Ghi chú dòng</label>
+        <input type="text" class="form-control f-note" placeholder="(Tuỳ chọn)">
+      </div>
+    </div>
+  </div>
+</template>
+
+<datalist id="hangmucList"></datalist>
+
+{% block scripts %}
+<script>
+let hangmuc = [];
+let todois   = [];
+let editRows = {{ rows | tojson }};
+
+// Load cấu kiện + tổ đội song song
+Promise.all([
+  fetch("/api/caukien").then(r=>r.json()),
+  fetch("/api/todoi").then(r=>r.json())
+]).then(([hm, td])=>{
+  hangmuc = hm;
+  todois  = td;
+  // Datalist cấu kiện
+  const dl = document.getElementById("hangmucList");
+  dl.innerHTML = hm.map(h=>`<option value="${h.code}">${h.code} — ${h.description}</option>`).join("");
+  // Datalist tổ đội
+  const dl2 = document.getElementById("todoi_list");
+  dl2.innerHTML = td.map(t=>`<option value="${t.title}">${t.title}${t.fullname?' — '+t.fullname:''}</option>`).join("");
+});
+
+window.addEventListener("DOMContentLoaded", ()=>{
+  if(editRows && editRows.length){ editRows.forEach(r=>themDong(r)); }
+  else { themDong(); }
+});
+
+function autoFillFullname(input) {
+  const val = input.value.trim();
+  const td  = todois.find(t=>t.title===val);
+  document.getElementById("fullname").value = td ? td.fullname : "";
+}
+
+function autoFillDesc(input) {
+  const code = input.value.trim();
+  const card = input.closest(".row-card");
+  const hm   = hangmuc.find(h=>h.code===code);
+  card.querySelector(".f-desc").value = hm ? hm.description : "";
+}
+
+function themDong(data={}) {
+  const tmpl = document.getElementById("rowTemplate");
+  const el   = tmpl.content.cloneNode(true);
+  const card = el.querySelector(".row-card");
+  document.getElementById("rowsContainer").appendChild(card);
+  updateIdx();
+  if(data.item_id) card.querySelector(".f-item-id").value = data.item_id;
+  if(data.code)    card.querySelector(".f-code").value = data.code;
+  if(data.description) card.querySelector(".f-desc").value = data.description;
+  if(data.qty !== undefined) card.querySelector(".f-qty").value = data.qty;
+  if(data.note)    card.querySelector(".f-note").value = data.note;
+}
+
+function xoaDong(btn) {
+  const cards = document.querySelectorAll("#rowsContainer .row-card");
+  if(cards.length <= 1){ alert("Phiếu phải có ít nhất 1 dòng!"); return; }
+  btn.closest(".row-card").remove(); updateIdx();
+}
+
+function updateIdx() {
+  document.querySelectorAll("#rowsContainer .row-card").forEach((c,i)=>{
+    c.querySelector(".idx-label").textContent = i+1;
+  });
+}
+
+function submitForm() {
+  const todoi = document.getElementById("todoi").value.trim();
+  if(!todoi){ alert("Vui lòng chọn Tổ Đội!"); return false; }
+  if(todois.length && !todois.find(t=>t.title===todoi)){
+    alert(`Tổ đội "${todoi}" không có trong danh sách!`); return false;
+  }
+
+  const rows = [];
+  let ok = true;
+  document.querySelectorAll("#rowsContainer .row-card").forEach(card=>{
+    const code = card.querySelector(".f-code").value.trim();
+    if(!code){ ok=false; card.querySelector(".f-code").focus(); return; }
+    if(hangmuc.length && !hangmuc.find(h=>h.code===code)){
+      alert(`Mã cấu kiện "${code}" không có trong danh mục!`); ok=false; return;
+    }
+    rows.push({
+      item_id:     card.querySelector(".f-item-id").value,
+      code,
+      description: card.querySelector(".f-desc").value,
+      qty:         parseFloat(card.querySelector(".f-qty").value)||0,
+      note:        card.querySelector(".f-note").value,
+    });
+  });
+  if(!ok) return false;
+  if(!rows.length){ alert("Vui lòng thêm ít nhất 1 dòng!"); return false; }
+  document.getElementById("rows_json").value = JSON.stringify(rows);
+  return true;
+}
+</script>
+{% endblock %}
