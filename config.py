@@ -24,7 +24,7 @@ LISTS = {
             "sophieu":     "sophieu",
             "date":        "date",
             "code":        "code",
-            "description": "description",
+            "description": "mota,
             "qty":         "qty",
             "note":        "note",
         }
