@@ -21,12 +21,13 @@ LISTS = {
         "color":        "#10522d",
         "color_light":  "#e8f5ee",
         "columns": {
-            "sophieu":     "sophieu",
-            "date":        "date",
-            "code":        "code",
+            "sophieu":     "stt",
+            "date":        "ngay",
+            "code":        "mack",
             "description": "mota",
-            "qty":         "qty",
-            "note":        "note",
+            "qty":         "soluong",
+            "note":        "ghichu",
+            "image":        "anh",
         }
     },
     "nhap": {
@@ -38,27 +39,27 @@ LISTS = {
         "color_light":  "#eaecf5",
         "columns": {
             "sophieu":     "stt",
-            "date":        "date",
+            "date":        "ngay",
             "todoi":       "todoi",
-            "fullname":    "fullname",
-            "code":        "caukien",
-            "description": "fulldescription",
-            "qty":         "qty",
-            "note":        "note",
+            "fullname":    "hovaten",
+            "code":        "mack",
+            "description": "mota",
+            "qty":         "soluong",
+            "note":        "ghichu",
         }
     }
 }
 
 LIST_HANGMUC = {
     "list_name": "hangmuc",
-    "col_code":  "code",
-    "col_desc":  "description",
+    "col_code":  "mack",
+    "col_desc":  "mota",
 }
 
 LIST_TODOI = {
     "list_name":    "todoi",
     "col_title":    "Title",
-    "col_fullname": "fullname",
+    "col_fullname": "hovaten",
 }
 
 LIST_USERS = {
