@@ -1,12 +1,9 @@
 services:
   - type: web
-    name: baocao-ckds
-    env: python
-    region: singapore
-    plan: free
+    name: baocao-v6
+    runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --workers 2 --timeout 60
-    healthCheckPath: /health
+    startCommand: gunicorn app:app
     envVars:
       - key: CLIENT_ID
         sync: false
@@ -16,5 +13,7 @@ services:
         sync: false
       - key: SITE_ID
         sync: false
+      - key: SHAREPOINT_SITE_URL
+        sync: false
       - key: SECRET_KEY
-        generateValue: true
+        sync: false
