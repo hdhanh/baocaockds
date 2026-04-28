@@ -24,7 +24,6 @@ LISTS = {
             "sophieu":     "stt",
             "date":        "ngay",
             "code":        "mack",
-            "description": "mota",
             "qty":         "soluong",
             "note":        "ghichu",
             "image":        "anh",
@@ -43,7 +42,6 @@ LISTS = {
             "todoi":       "todoi",
             "fullname":    "hovaten",
             "code":        "mack",
-            "description": "mota",
             "qty":         "soluong",
             "note":        "ghichu",
         }

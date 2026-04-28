@@ -68,6 +68,25 @@ def _safe_filename(name):
     return re.sub(r"[^a-zA-Z0-9._-]", "_", name)
 
 
+# ── Debug: lấy tên cột thật từ SharePoint ────────────────────────────
+
+def lay_ten_cot(list_name: str) -> list:
+    """Trả về [{name, displayName, type}, ...] — dùng để debug internal names."""
+    url = f"{BASE_URL}/lists/{list_name}/columns"
+    try:
+        items = requests.get(url, headers=_headers(), timeout=10).json().get("value", [])
+    except Exception as e:
+        return [{"error": str(e)}]
+    result = []
+    for col in items:
+        result.append({
+            "name":        col.get("name", ""),          # internal name (dùng trong API)
+            "displayName": col.get("displayName", ""),   # tên hiển thị
+            "type":        col.get("columnGroup", ""),
+        })
+    return sorted(result, key=lambda x: x["name"])
+
+
 # ── Auth ─────────────────────────────────────────────────────────────
 
 def authenticate(username, password):
@@ -189,7 +208,7 @@ def lay_chi_tiet_phieu(list_key: str, sophieu: str) -> list:
             "sophieu":     sp,
             "date":        _fmt_date(f.get(cols["date"], "")),
             "code":        str(f.get(cols["code"], "")).strip(),
-            "description": str(f.get(cols["description"], "")).strip(),
+            "description": "",
             "qty":         f.get(cols["qty"], 0),
             "note":        str(f.get(cols["note"], "")).strip(),
         }
@@ -217,7 +236,6 @@ def tao_dong(list_key: str, data: dict) -> str | None:
         cols["sophieu"]:     sp_val,
         cols["date"]:        data.get("date", ""),
         cols["code"]:        str(data.get("code", "")),
-        cols["description"]: str(data.get("description", "")),
         cols["qty"]:         float(data.get("qty") or 0),
         cols["note"]:        str(data.get("note", "")),
     }
@@ -242,7 +260,6 @@ def cap_nhat_dong(list_key: str, item_id: str, data: dict) -> bool:
     fields = {
         cols["date"]:        data.get("date", ""),
         cols["code"]:        str(data.get("code", "")),
-        cols["description"]: str(data.get("description", "")),
         cols["qty"]:         float(data.get("qty") or 0),
         cols["note"]:        str(data.get("note", "")),
     }

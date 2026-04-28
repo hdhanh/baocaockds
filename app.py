@@ -517,5 +517,35 @@ def health():
     return {"status": "ok"}, 200
 
 
+# ════════════════════════════════════════════════════════════════════
+#  DEBUG — xem tên cột thật của SharePoint (xóa sau khi dùng xong)
+# ════════════════════════════════════════════════════════════════════
+
+@app.route("/debug/columns")
+@login_required
+def debug_columns():
+    result = {}
+    for key in ["xuat", "nhap"]:
+        list_name = config.LISTS[key]["list_name"]
+        result[list_name] = graph_api.lay_ten_cot(list_name)
+    for list_name in [config.LIST_HANGMUC["list_name"],
+                      config.LIST_TODOI["list_name"],
+                      config.LIST_USERS["list_name"]]:
+        result[list_name] = graph_api.lay_ten_cot(list_name)
+
+    html = "<h2 style='font-family:monospace'>Debug: Internal Field Names của SharePoint</h2>"
+    for lst, cols in result.items():
+        html += f"<h3 style='font-family:monospace;color:#1a2744'>List: <u>{lst}</u></h3>"
+        html += "<table border=1 cellpadding=6 style='font-family:monospace;border-collapse:collapse'>"
+        html += "<tr style='background:#eee'><th>internal name (dùng trong API)</th><th>displayName</th></tr>"
+        for c in cols:
+            if "error" in c:
+                html += f"<tr><td colspan=2 style='color:red'>{c}</td></tr>"
+            else:
+                html += f"<tr><td><b>{c['name']}</b></td><td>{c['displayName']}</td></tr>"
+        html += "</table><br>"
+    return html
+
+
 if __name__ == "__main__":
     app.run(debug=True)
