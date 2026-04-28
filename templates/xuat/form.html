@@ -26,6 +26,14 @@
                   box-shadow:0 2px 8px rgba(0,0,0,.07); }
   .section-title { font-size:.78rem;font-weight:700;color:#888;text-transform:uppercase;
                    letter-spacing:.05em;margin-bottom:10px; }
+  .btn-them-dong {
+    display:block;width:100%;padding:14px;margin-bottom:12px;
+    background:{{ cfg.color }};color:#fff;border:none;border-radius:14px;
+    font-size:1.08rem;font-weight:800;letter-spacing:.04em;
+    box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;
+    transition:opacity .15s,transform .1s;
+  }
+  .btn-them-dong:active { opacity:.85;transform:scale(.98); }
 </style>
 {% endblock %}
 
@@ -46,15 +54,26 @@
         <label class="form-label">Ngày</label>
         <input type="date" name="date" class="form-control" value="{{ today }}" required>
       </div>
-      <div class="col-12">
-        <label class="form-label">Ghi chú phiếu</label>
-        <input type="text" name="note" class="form-control" placeholder="(Tuỳ chọn)"
-               value="{{ rows[0].note if rows else '' }}">
-      </div>
     </div>
   </div>
 
-  <!-- Ảnh đính kèm -->
+  <!-- Danh sách dòng -->
+  <div class="section-card" style="padding-bottom:8px;">
+    <div class="section-title">Danh sách cấu kiện</div>
+    <div id="rowsContainer"></div>
+  </div>
+
+  <!-- Nút thêm dòng — to, nổi bật -->
+  <button type="button" class="btn-them-dong" onclick="themDong()">＋ THÊM DÒNG</button>
+
+  <!-- Ghi chú phiếu — xuống dưới -->
+  <div class="section-card">
+    <div class="section-title">Ghi chú phiếu</div>
+    <input type="text" name="note" class="form-control" placeholder="(Tuỳ chọn)"
+           value="{{ rows[0].note if rows else '' }}">
+  </div>
+
+  <!-- Ảnh đính kèm — xuống dưới cùng -->
   <div class="section-card">
     <div class="section-title">Ảnh phiếu xuất (1 ảnh)</div>
     {% if attachment and mode=='edit' %}
@@ -68,17 +87,6 @@
     <img id="imgPreview" class="img-preview" alt="Xem trước ảnh">
   </div>
 
-  <!-- Danh sách dòng -->
-  <div class="section-card">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <div class="section-title mb-0">Danh sách cấu kiện</div>
-      <button type="button" class="btn btn-sm"
-              style="background:{{ cfg.color }};color:#fff;border-radius:8px;font-weight:700;"
-              onclick="themDong()">+ Thêm dòng</button>
-    </div>
-    <div id="rowsContainer"></div>
-  </div>
-
   <button type="submit" class="btn-main" onclick="return submitForm()">
     {{ "LƯU PHIẾU XUẤT" if mode=='create' else "CẬP NHẬT PHIẾU XUẤT" }}
   </button>
@@ -90,25 +98,28 @@
     <button type="button" class="btn-del-row" onclick="xoaDong(this)">🗑</button>
     <div class="row-num">Dòng <span class="idx-label">1</span></div>
     <input type="hidden" class="f-item-id" value="">
-    <div class="mb-2">
-      <label class="form-label mb-1">Mã cấu kiện <span style="color:red">*</span></label>
-      <input type="text" class="form-control f-code" list="hangmucList"
-             placeholder="Chọn hoặc gõ mã..." autocomplete="off"
-             oninput="autoFillDesc(this)">
-    </div>
-    <div class="mb-2">
-      <label class="form-label mb-1">Mô tả</label>
-      <input type="text" class="form-control f-desc" readonly placeholder="Tự động điền...">
-    </div>
-    <div class="row g-2">
+    <!-- Mã cấu kiện + Số lượng cùng hàng -->
+    <div class="row g-2 mb-2">
+      <div class="col-7">
+        <label class="form-label mb-1">Mã cấu kiện <span style="color:red">*</span></label>
+        <input type="text" class="form-control f-code" list="hangmucList"
+               placeholder="Chọn hoặc gõ mã..." autocomplete="off"
+               oninput="autoFillDesc(this)">
+      </div>
       <div class="col-5">
         <label class="form-label mb-1">Số lượng <span style="color:red">*</span></label>
         <input type="number" class="form-control f-qty" min="0" step="any" placeholder="0">
       </div>
-      <div class="col-7">
-        <label class="form-label mb-1">Ghi chú dòng</label>
-        <input type="text" class="form-control f-note" placeholder="(Tuỳ chọn)">
-      </div>
+    </div>
+    <!-- Mô tả bên dưới -->
+    <div class="mb-2">
+      <label class="form-label mb-1">Mô tả</label>
+      <input type="text" class="form-control f-desc" readonly placeholder="Tự động điền...">
+    </div>
+    <!-- Ghi chú dòng cuối cùng -->
+    <div class="mb-1">
+      <label class="form-label mb-1">Ghi chú dòng</label>
+      <input type="text" class="form-control f-note" placeholder="(Tuỳ chọn)">
     </div>
   </div>
 </template>
@@ -122,28 +133,22 @@ let hangmuc = [];
 let editRows = {{ rows | tojson }};
 const COLOR  = "{{ cfg.color }}";
 
-// Load cấu kiện
 fetch("/api/caukien").then(r=>r.json()).then(data=>{
   hangmuc = data;
   const dl = document.getElementById("hangmucList");
   dl.innerHTML = data.map(h=>`<option value="${h.code}">${h.code} — ${h.description}</option>`).join("");
 });
 
-// Khởi tạo dòng có sẵn khi edit
 window.addEventListener("DOMContentLoaded", ()=>{
-  if(editRows && editRows.length){
-    editRows.forEach(r=>themDong(r));
-  } else {
-    themDong();
-  }
+  if(editRows && editRows.length){ editRows.forEach(r=>themDong(r)); }
+  else { themDong(); }
 });
 
 function themDong(data={}) {
   const tmpl = document.getElementById("rowTemplate");
   const el   = tmpl.content.cloneNode(true);
   const card = el.querySelector(".row-card");
-  const cont = document.getElementById("rowsContainer");
-  cont.appendChild(card);
+  document.getElementById("rowsContainer").appendChild(card);
   updateIdx();
   if(data.item_id) card.querySelector(".f-item-id").value = data.item_id;
   if(data.code)    card.querySelector(".f-code").value = data.code;
@@ -179,7 +184,6 @@ function submitForm() {
     const code = card.querySelector(".f-code").value.trim();
     const qty  = card.querySelector(".f-qty").value;
     if(!code){ ok=false; card.querySelector(".f-code").focus(); return; }
-    // Validate code có trong danh mục
     if(hangmuc.length && !hangmuc.find(h=>h.code===code)){
       alert(`Mã cấu kiện "${code}" không có trong danh mục!`);
       ok=false; return;
@@ -198,7 +202,6 @@ function submitForm() {
   return true;
 }
 
-// Preview ảnh
 document.getElementById("imageInput").addEventListener("change", function(){
   const f = this.files[0]; if(!f) return;
   const img = document.getElementById("imgPreview");
