@@ -59,11 +59,6 @@
         <datalist id="todoi_list"></datalist>
       </div>
       <div class="col-12">
-        <label class="form-label">Tên tổ đội</label>
-        <input type="text" name="fullname" id="fullname" class="form-control"
-               readonly placeholder="Tự động điền theo tổ đội..."
-               value="{{ fullname_val }}">
-      </div>
     </div>
   </div>
 
@@ -136,7 +131,7 @@ Promise.all([
   const dl = document.getElementById("hangmucList");
   dl.innerHTML = hm.map(h=>`<option value="${h.code}">${h.code} — ${h.description}</option>`).join("");
   const dl2 = document.getElementById("todoi_list");
-  dl2.innerHTML = td.map(t=>`<option value="${t.title}">${t.title}${t.fullname?' — '+t.fullname:''}</option>`).join("");
+  dl2.innerHTML = td.map(t=>`<option value="${t.title}">${t.title}</option>`).join("");
 });
 
 window.addEventListener("DOMContentLoaded", ()=>{
@@ -145,9 +140,7 @@ window.addEventListener("DOMContentLoaded", ()=>{
 });
 
 function autoFillFullname(input) {
-  const val = input.value.trim();
-  const td  = todois.find(t=>t.title===val);
-  document.getElementById("fullname").value = td ? td.fullname : "";
+  // hovaten đã bỏ — không cần auto fill
 }
 
 function autoFillDesc(input) {
