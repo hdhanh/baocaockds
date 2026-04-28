@@ -23,14 +23,26 @@
                   box-shadow:0 2px 8px rgba(0,0,0,.07); }
   .section-title { font-size:.78rem;font-weight:700;color:#888;text-transform:uppercase;
                    letter-spacing:.05em;margin-bottom:10px; }
+  .hovaten-chip { background:#eef2ff;border-radius:8px;padding:6px 12px;
+                  font-size:.88rem;font-weight:600;color:#3730a3;margin-top:4px;
+                  min-height:34px;display:flex;align-items:center; }
   .btn-them-dong {
-    display:block;width:100%;padding:14px;margin-bottom:12px;
-    background:{{ cfg.color }};color:#fff;border:none;border-radius:14px;
-    font-size:1.08rem;font-weight:800;letter-spacing:.04em;
-    box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 18px;margin-bottom:12px;
+    background:#fff;color:{{ cfg.color }};
+    border:2px solid {{ cfg.color }};border-radius:10px;
+    font-size:.92rem;font-weight:700;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .btn-them-dong:hover { background:{{ cfg.color }};color:#fff; }
+  .btn-luu {
+    display:block;width:100%;padding:14px;
+    background:#e53e3e;color:#fff;border:none;border-radius:14px;
+    font-size:1.05rem;font-weight:800;letter-spacing:.04em;
+    box-shadow:0 4px 14px rgba(229,62,62,.35);cursor:pointer;
     transition:opacity .15s,transform .1s;
   }
-  .btn-them-dong:active { opacity:.85;transform:scale(.98); }
+  .btn-luu:active { opacity:.85;transform:scale(.98); }
 </style>
 {% endblock %}
 
@@ -59,6 +71,10 @@
         <datalist id="todoi_list"></datalist>
       </div>
       <div class="col-12">
+        <label class="form-label">Tên tổ đội</label>
+        <div class="hovaten-chip" id="hovaten-display">{{ fullname_val or '—' }}</div>
+        <input type="hidden" name="fullname" id="fullname" value="{{ fullname_val }}">
+      </div>
     </div>
   </div>
 
@@ -66,19 +82,12 @@
   <div class="section-card" style="padding-bottom:8px;">
     <div class="section-title">Danh sách cấu kiện</div>
     <div id="rowsContainer"></div>
+    <div style="margin-top:8px;">
+      <button type="button" class="btn-them-dong" onclick="themDong()">＋ Thêm dòng</button>
+    </div>
   </div>
 
-  <!-- Nút thêm dòng — to, nổi bật -->
-  <button type="button" class="btn-them-dong" onclick="themDong()">＋ THÊM DÒNG</button>
-
-  <!-- Ghi chú phiếu — xuống dưới -->
-  <div class="section-card">
-    <div class="section-title">Ghi chú phiếu</div>
-    <input type="text" name="note" class="form-control" placeholder="(Tuỳ chọn)"
-           value="{{ rows[0].note if rows else '' }}">
-  </div>
-
-  <button type="submit" class="btn-main" onclick="return submitForm()">
+  <button type="submit" class="btn-luu" onclick="return submitForm()">
     {{ "LƯU PHIẾU NHẬP" if mode=='create' else "CẬP NHẬT PHIẾU NHẬP" }}
   </button>
 </form>
@@ -88,7 +97,6 @@
     <button type="button" class="btn-del-row" onclick="xoaDong(this)">🗑</button>
     <div class="row-num">Dòng <span class="idx-label">1</span></div>
     <input type="hidden" class="f-item-id" value="">
-    <!-- Mã cấu kiện + Số lượng cùng hàng -->
     <div class="row g-2 mb-2">
       <div class="col-7">
         <label class="form-label mb-1">Mã cấu kiện <span style="color:red">*</span></label>
@@ -101,15 +109,9 @@
         <input type="number" class="form-control f-qty" min="0" step="any" placeholder="0">
       </div>
     </div>
-    <!-- Mô tả bên dưới -->
-    <div class="mb-2">
+    <div class="mb-1">
       <label class="form-label mb-1">Mô tả</label>
       <input type="text" class="form-control f-desc" readonly placeholder="Tự động điền...">
-    </div>
-    <!-- Ghi chú dòng cuối cùng -->
-    <div class="mb-1">
-      <label class="form-label mb-1">Ghi chú dòng</label>
-      <input type="text" class="form-control f-note" placeholder="(Tuỳ chọn)">
     </div>
   </div>
 </template>
@@ -132,6 +134,10 @@ Promise.all([
   dl.innerHTML = hm.map(h=>`<option value="${h.code}">${h.code} — ${h.description}</option>`).join("");
   const dl2 = document.getElementById("todoi_list");
   dl2.innerHTML = td.map(t=>`<option value="${t.title}">${t.title}${t.fullname?' — '+t.fullname:''}</option>`).join("");
+  // Nếu đang edit, điền lại tên tổ đội
+  if(document.getElementById("todoi").value){
+    autoFillFullname(document.getElementById("todoi"));
+  }
 });
 
 window.addEventListener("DOMContentLoaded", ()=>{
@@ -142,7 +148,9 @@ window.addEventListener("DOMContentLoaded", ()=>{
 function autoFillFullname(input) {
   const val = input.value.trim();
   const td  = todois.find(t=>t.title===val);
-  document.getElementById("fullname").value = td ? td.fullname : "";
+  const name = td ? td.fullname : (val ? "" : "—");
+  document.getElementById("fullname").value        = td ? td.fullname : "";
+  document.getElementById("hovaten-display").textContent = name || "—";
 }
 
 function autoFillDesc(input) {
@@ -158,11 +166,10 @@ function themDong(data={}) {
   const card = el.querySelector(".row-card");
   document.getElementById("rowsContainer").appendChild(card);
   updateIdx();
-  if(data.item_id) card.querySelector(".f-item-id").value = data.item_id;
-  if(data.code)    card.querySelector(".f-code").value = data.code;
+  if(data.item_id)     card.querySelector(".f-item-id").value = data.item_id;
+  if(data.code)        card.querySelector(".f-code").value = data.code;
   if(data.description) card.querySelector(".f-desc").value = data.description;
   if(data.qty !== undefined) card.querySelector(".f-qty").value = data.qty;
-  if(data.note)    card.querySelector(".f-note").value = data.note;
 }
 
 function xoaDong(btn) {
@@ -180,9 +187,6 @@ function updateIdx() {
 function submitForm() {
   const todoi = document.getElementById("todoi").value.trim();
   if(!todoi){ alert("Vui lòng chọn Tổ Đội!"); return false; }
-  if(todois.length && !todois.find(t=>t.title===todoi)){
-    alert(`Tổ đội "${todoi}" không có trong danh sách!`); return false;
-  }
   const rows = [];
   let ok = true;
   document.querySelectorAll("#rowsContainer .row-card").forEach(card=>{
@@ -196,7 +200,6 @@ function submitForm() {
       code,
       description: card.querySelector(".f-desc").value,
       qty:         parseFloat(card.querySelector(".f-qty").value)||0,
-      note:        card.querySelector(".f-note").value,
     });
   });
   if(!ok) return false;
