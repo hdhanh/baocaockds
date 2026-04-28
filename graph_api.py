@@ -153,7 +153,7 @@ def lay_hangmuc() -> list:
 
 
 def lay_todoi() -> list:
-    """[{title}, ...] từ list tổ đội — dùng cho dropdown."""
+    """[{title, fullname}, ...] từ list tổ đội."""
     cfg = config.LIST_TODOI
     url = f"{BASE_URL}/lists/{cfg['list_name']}/items?$expand=fields&$top=999"
     try:
@@ -162,11 +162,12 @@ def lay_todoi() -> list:
     result = []
     seen = set()
     for item in items:
-        f = item.get("fields", {})
-        title = str(f.get(cfg["col_title"], "")).strip()
+        f        = item.get("fields", {})
+        title    = str(f.get(cfg["col_title"], "")).strip()
+        fullname = str(f.get(cfg["col_fullname"], "")).strip()
         if title and title not in seen:
             seen.add(title)
-            result.append({"title": title})
+            result.append({"title": title, "fullname": fullname})
     return sorted(result, key=lambda x: x["title"])
 
 
@@ -233,12 +234,13 @@ def lay_chi_tiet_phieu(list_key: str, sophieu: str) -> list:
             "sophieu":     sp,
             "date":        _fmt_date(f.get(cols["date"], "")),
             "code":        str(f.get(cols["code"], "")).strip(),
-            "description": "",
+            "description": str(f.get(cols["description"], "")).strip(),
             "qty":         f.get(cols["qty"], 0),
             "note":        str(f.get(cols["note"], "")).strip(),
         }
         if cfg["has_todoi"]:
-            row["todoi"] = str(f.get(cols.get("todoi", ""), "")).strip()
+            row["todoi"]    = str(f.get(cols.get("todoi", ""), "")).strip()
+            row["fullname"] = str(f.get(cols.get("fullname", ""), "")).strip()
         rows.append(row)
 
     rows.sort(key=lambda x: _safe_int(x["item_id"]))
@@ -260,11 +262,13 @@ def tao_dong(list_key: str, data: dict) -> str | None:
         cols["sophieu"]:     sp_val,
         cols["date"]:        data.get("date", ""),
         cols["code"]:        str(data.get("code", "")),
+        cols["description"]: str(data.get("description", "")),
         cols["qty"]:         float(data.get("qty") or 0),
         cols["note"]:        str(data.get("note", "")),
     }
     if cfg["has_todoi"]:
         fields[cols["todoi"]]    = str(data.get("todoi", ""))
+        fields[cols["fullname"]] = str(data.get("fullname", ""))
 
     url = f"{BASE_URL}/lists/{cfg['list_name']}/items"
     print(f"[TAO_DONG] Sending fields: {fields}")
@@ -284,11 +288,13 @@ def cap_nhat_dong(list_key: str, item_id: str, data: dict) -> bool:
     fields = {
         cols["date"]:        data.get("date", ""),
         cols["code"]:        str(data.get("code", "")),
+        cols["description"]: str(data.get("description", "")),
         cols["qty"]:         float(data.get("qty") or 0),
         cols["note"]:        str(data.get("note", "")),
     }
     if cfg["has_todoi"]:
         fields[cols["todoi"]]    = str(data.get("todoi", ""))
+        fields[cols["fullname"]] = str(data.get("fullname", ""))
 
     url = f"{BASE_URL}/lists/{cfg['list_name']}/items/{item_id}/fields"
     try:

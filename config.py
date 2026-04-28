@@ -24,9 +24,10 @@ LISTS = {
             "sophieu":     "stt",
             "date":        "ngay",
             "code":        "mack",
+            "description": "mota",
             "qty":         "soluong",
             "note":        "ghichu",
-            "image":        "anh",
+            "image":       "anh",
         }
     },
     "nhap": {
@@ -40,7 +41,9 @@ LISTS = {
             "sophieu":     "stt",
             "date":        "ngay",
             "todoi":       "todoi",
+            "fullname":    "hovaten",
             "code":        "mack",
+            "description": "mota",
             "qty":         "soluong",
             "note":        "ghichu",
         }
@@ -56,6 +59,7 @@ LIST_HANGMUC = {
 LIST_TODOI = {
     "list_name":    "todoi",
     "col_title":    "Title",
+    "col_fullname": "hovaten",
 }
 
 LIST_USERS = {
