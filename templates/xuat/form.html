@@ -19,21 +19,30 @@
   .row-card .btn-del-row { position:absolute;top:10px;right:12px;background:none;border:none;
                             color:#e74c3c;font-size:1.1rem;cursor:pointer;padding:2px 6px; }
   .row-num { font-size:.75rem;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:6px; }
-  .img-preview { width:100%;border-radius:10px;max-height:200px;object-fit:contain;
-                 background:#f5f7fa;margin-top:8px;display:none; }
-  .img-preview.show { display:block; }
   .section-card { background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;
                   box-shadow:0 2px 8px rgba(0,0,0,.07); }
   .section-title { font-size:.78rem;font-weight:700;color:#888;text-transform:uppercase;
                    letter-spacing:.05em;margin-bottom:10px; }
+  .img-preview { width:100%;border-radius:10px;max-height:200px;object-fit:contain;
+                 background:#f5f7fa;margin-top:8px;display:none; }
+  .img-preview.show { display:block; }
   .btn-them-dong {
-    display:block;width:100%;padding:14px;margin-bottom:12px;
-    background:{{ cfg.color }};color:#fff;border:none;border-radius:14px;
-    font-size:1.08rem;font-weight:800;letter-spacing:.04em;
-    box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 18px;margin-bottom:12px;
+    background:#fff;color:{{ cfg.color }};
+    border:2px solid {{ cfg.color }};border-radius:10px;
+    font-size:.92rem;font-weight:700;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .btn-them-dong:hover { background:{{ cfg.color }};color:#fff; }
+  .btn-luu {
+    display:block;width:100%;padding:14px;
+    background:#e53e3e;color:#fff;border:none;border-radius:14px;
+    font-size:1.05rem;font-weight:800;letter-spacing:.04em;
+    box-shadow:0 4px 14px rgba(229,62,62,.35);cursor:pointer;
     transition:opacity .15s,transform .1s;
   }
-  .btn-them-dong:active { opacity:.85;transform:scale(.98); }
+  .btn-luu:active { opacity:.85;transform:scale(.98); }
 </style>
 {% endblock %}
 
@@ -61,25 +70,17 @@
   <div class="section-card" style="padding-bottom:8px;">
     <div class="section-title">Danh sách cấu kiện</div>
     <div id="rowsContainer"></div>
+    <div style="margin-top:8px;">
+      <button type="button" class="btn-them-dong" onclick="themDong()">＋ Thêm dòng</button>
+    </div>
   </div>
 
-  <!-- Nút thêm dòng — to, nổi bật -->
-  <button type="button" class="btn-them-dong" onclick="themDong()">＋ THÊM DÒNG</button>
-
-  <!-- Ghi chú phiếu — xuống dưới -->
+  <!-- Ảnh đính kèm -->
   <div class="section-card">
-    <div class="section-title">Ghi chú phiếu</div>
-    <input type="text" name="note" class="form-control" placeholder="(Tuỳ chọn)"
-           value="{{ rows[0].note if rows else '' }}">
-  </div>
-
-  <!-- Ảnh đính kèm — xuống dưới cùng -->
-  <div class="section-card">
-    <div class="section-title">Ảnh phiếu xuất (1 ảnh)</div>
+    <div class="section-title">Ảnh phiếu xuất</div>
     {% if attachment and mode=='edit' %}
     <div style="font-size:.82rem;color:#666;margin-bottom:8px;">
-      Ảnh hiện tại: <strong>{{ attachment.name }}</strong>
-      — chọn file mới để thay thế
+      Ảnh hiện tại: <strong>{{ attachment.name }}</strong> — chọn file mới để thay thế
     </div>
     {% endif %}
     <input type="file" name="image" id="imageInput" class="form-control"
@@ -87,18 +88,16 @@
     <img id="imgPreview" class="img-preview" alt="Xem trước ảnh">
   </div>
 
-  <button type="submit" class="btn-main" onclick="return submitForm()">
+  <button type="submit" class="btn-luu" onclick="return submitForm()">
     {{ "LƯU PHIẾU XUẤT" if mode=='create' else "CẬP NHẬT PHIẾU XUẤT" }}
   </button>
 </form>
 
-<!-- Template 1 dòng -->
 <template id="rowTemplate">
   <div class="row-card" data-idx="0">
     <button type="button" class="btn-del-row" onclick="xoaDong(this)">🗑</button>
     <div class="row-num">Dòng <span class="idx-label">1</span></div>
     <input type="hidden" class="f-item-id" value="">
-    <!-- Mã cấu kiện + Số lượng cùng hàng -->
     <div class="row g-2 mb-2">
       <div class="col-7">
         <label class="form-label mb-1">Mã cấu kiện <span style="color:red">*</span></label>
@@ -111,27 +110,19 @@
         <input type="number" class="form-control f-qty" min="0" step="any" placeholder="0">
       </div>
     </div>
-    <!-- Mô tả bên dưới -->
-    <div class="mb-2">
+    <div class="mb-1">
       <label class="form-label mb-1">Mô tả</label>
       <input type="text" class="form-control f-desc" readonly placeholder="Tự động điền...">
-    </div>
-    <!-- Ghi chú dòng cuối cùng -->
-    <div class="mb-1">
-      <label class="form-label mb-1">Ghi chú dòng</label>
-      <input type="text" class="form-control f-note" placeholder="(Tuỳ chọn)">
     </div>
   </div>
 </template>
 
-<!-- Datalist cấu kiện -->
 <datalist id="hangmucList"></datalist>
 
 {% block scripts %}
 <script>
 let hangmuc = [];
 let editRows = {{ rows | tojson }};
-const COLOR  = "{{ cfg.color }}";
 
 fetch("/api/caukien").then(r=>r.json()).then(data=>{
   hangmuc = data;
@@ -144,24 +135,29 @@ window.addEventListener("DOMContentLoaded", ()=>{
   else { themDong(); }
 });
 
+function autoFillDesc(input) {
+  const code = input.value.trim();
+  const card = input.closest(".row-card");
+  const hm   = hangmuc.find(h=>h.code===code);
+  card.querySelector(".f-desc").value = hm ? hm.description : "";
+}
+
 function themDong(data={}) {
   const tmpl = document.getElementById("rowTemplate");
   const el   = tmpl.content.cloneNode(true);
   const card = el.querySelector(".row-card");
   document.getElementById("rowsContainer").appendChild(card);
   updateIdx();
-  if(data.item_id) card.querySelector(".f-item-id").value = data.item_id;
-  if(data.code)    card.querySelector(".f-code").value = data.code;
+  if(data.item_id)     card.querySelector(".f-item-id").value = data.item_id;
+  if(data.code)        card.querySelector(".f-code").value = data.code;
   if(data.description) card.querySelector(".f-desc").value = data.description;
   if(data.qty !== undefined) card.querySelector(".f-qty").value = data.qty;
-  if(data.note)    card.querySelector(".f-note").value = data.note;
 }
 
 function xoaDong(btn) {
   const cards = document.querySelectorAll("#rowsContainer .row-card");
   if(cards.length <= 1){ alert("Phiếu phải có ít nhất 1 dòng!"); return; }
-  btn.closest(".row-card").remove();
-  updateIdx();
+  btn.closest(".row-card").remove(); updateIdx();
 }
 
 function updateIdx() {
@@ -170,30 +166,20 @@ function updateIdx() {
   });
 }
 
-function autoFillDesc(input) {
-  const code = input.value.trim();
-  const card = input.closest(".row-card");
-  const hm   = hangmuc.find(h=>h.code===code);
-  card.querySelector(".f-desc").value = hm ? hm.description : "";
-}
-
 function submitForm() {
   const rows = [];
   let ok = true;
   document.querySelectorAll("#rowsContainer .row-card").forEach(card=>{
     const code = card.querySelector(".f-code").value.trim();
-    const qty  = card.querySelector(".f-qty").value;
     if(!code){ ok=false; card.querySelector(".f-code").focus(); return; }
     if(hangmuc.length && !hangmuc.find(h=>h.code===code)){
-      alert(`Mã cấu kiện "${code}" không có trong danh mục!`);
-      ok=false; return;
+      alert(`Mã cấu kiện "${code}" không có trong danh mục!`); ok=false; return;
     }
     rows.push({
       item_id:     card.querySelector(".f-item-id").value,
       code,
       description: card.querySelector(".f-desc").value,
-      qty:         parseFloat(qty)||0,
-      note:        card.querySelector(".f-note").value,
+      qty:         parseFloat(card.querySelector(".f-qty").value)||0,
     });
   });
   if(!ok) return false;
