@@ -267,6 +267,7 @@ def tao_dong(list_key: str, data: dict) -> str | None:
         fields[cols["todoi"]]    = str(data.get("todoi", ""))
 
     url = f"{BASE_URL}/lists/{cfg['list_name']}/items"
+    print(f"[TAO_DONG] Sending fields: {fields}")
     try:
         res = requests.post(url, headers=_headers(), json={"fields": fields}, timeout=15)
         if res.status_code == 201:
