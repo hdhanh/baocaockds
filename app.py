@@ -195,6 +195,7 @@ def tao_xuat():
     rows    = _parse_rows()
 
     print(f"[TAO_XUAT POST] sophieu={sophieu}, ngay={ngay}, rows_count={len(rows)}")
+    print(f"[TAO_XUAT POST] rows_json raw={request.form.get('rows_json','')[:300]}")
 
     if not sophieu:
         flash("Thiếu số phiếu!", "warning")
@@ -401,6 +402,7 @@ def tao_nhap():
     rows     = _parse_rows()
 
     print(f"[TAO_NHAP POST] sophieu={sophieu}, todoi={todoi}, rows_count={len(rows)}")
+    print(f"[TAO_NHAP POST] rows_json raw={request.form.get('rows_json','')[:300]}")
 
     if not sophieu:
         flash("Thiếu số phiếu!", "warning")
