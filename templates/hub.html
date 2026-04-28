@@ -25,6 +25,7 @@
     .hub-btn .label p  { font-size:.85rem; opacity:.75; margin:4px 0 0; }
     .hub-btn.xuat { border-color:rgba(100,255,160,.35); }
     .hub-btn.nhap { border-color:rgba(100,140,255,.35); }
+    .hub-btn.tq   { border-color:rgba(200,150,255,.35); }
     .footer { padding:20px; text-align:center; }
     .footer a { color:rgba(255,255,255,.5); font-size:.82rem; text-decoration:none; }
     .footer a:hover { color:#fff; }
@@ -52,6 +53,13 @@
     <div class="label">
       <h3>PHIẾU NHẬP</h3>
       <p>Xem, tạo và quản lý phiếu nhập</p>
+    </div>
+  </a>
+  <a href="{{ url_for('tongquan') }}" class="hub-btn tq">
+    <span class="icon">📊</span>
+    <div class="label">
+      <h3>TỔNG QUAN</h3>
+      <p>Thống kê nhập / xuất / tồn kho</p>
     </div>
   </a>
 </div>
