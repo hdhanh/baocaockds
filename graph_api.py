@@ -68,6 +68,34 @@ def _safe_filename(name):
     return re.sub(r"[^a-zA-Z0-9._-]", "_", name)
 
 
+# ── Tổng quan hangmuc ────────────────────────────────────────────────
+
+def lay_tong_quan() -> list:
+    """Đọc thẳng các cột từ list hangmuc — Power Automate lo tính toán."""
+    cfg = config.LIST_HANGMUC
+    url = f"{BASE_URL}/lists/{cfg['list_name']}/items?$expand=fields&$top=999"
+    try:
+        items = requests.get(url, headers=_headers(), timeout=10).json().get("value", [])
+    except Exception:
+        return []
+    result = []
+    for item in items:
+        f    = item.get("fields", {})
+        mack = str(f.get(cfg["col_code"], "")).strip()
+        if not mack:
+            continue
+        result.append({
+            "mack":     mack,
+            "mota":     str(f.get(cfg["col_desc"], "")).strip(),
+            "soluong":  float(f.get("soluong",  0) or 0),
+            "tongnhap": float(f.get("tongnhap", 0) or 0),
+            "tongxuat": float(f.get("tongxuat", 0) or 0),
+            "ton":      float(f.get("ton",      0) or 0),
+            "canduc":   float(f.get("canduc",   0) or 0),
+        })
+    return sorted(result, key=lambda x: x["mack"])
+
+
 # ── Debug: lấy tên cột thật từ SharePoint ────────────────────────────
 
 def lay_ten_cot(list_name: str) -> list:
@@ -125,7 +153,7 @@ def lay_hangmuc() -> list:
 
 
 def lay_todoi() -> list:
-    """[{title, fullname}, ...] từ list tổ đội — dùng cho dropdown + vlookup."""
+    """[{title}, ...] từ list tổ đội — dùng cho dropdown."""
     cfg = config.LIST_TODOI
     url = f"{BASE_URL}/lists/{cfg['list_name']}/items?$expand=fields&$top=999"
     try:
@@ -135,11 +163,10 @@ def lay_todoi() -> list:
     seen = set()
     for item in items:
         f = item.get("fields", {})
-        title    = str(f.get(cfg["col_title"], "")).strip()
-        fullname = str(f.get(cfg["col_fullname"], "")).strip()
+        title = str(f.get(cfg["col_title"], "")).strip()
         if title and title not in seen:
             seen.add(title)
-            result.append({"title": title, "fullname": fullname})
+            result.append({"title": title})
     return sorted(result, key=lambda x: x["title"])
 
 
@@ -178,8 +205,6 @@ def lay_danh_sach_phieu(list_key: str) -> list:
                 "so_dong": 0,
                 "todoi":   str(f.get(cols.get("todoi", ""), "")).strip()
                            if cfg["has_todoi"] else "",
-                "fullname": str(f.get(cols.get("fullname", ""), "")).strip()
-                            if cfg["has_todoi"] else "",
             }
         groups[sp]["so_dong"] += 1
 
@@ -213,8 +238,7 @@ def lay_chi_tiet_phieu(list_key: str, sophieu: str) -> list:
             "note":        str(f.get(cols["note"], "")).strip(),
         }
         if cfg["has_todoi"]:
-            row["todoi"]    = str(f.get(cols.get("todoi", ""), "")).strip()
-            row["fullname"] = str(f.get(cols.get("fullname", ""), "")).strip()
+            row["todoi"] = str(f.get(cols.get("todoi", ""), "")).strip()
         rows.append(row)
 
     rows.sort(key=lambda x: _safe_int(x["item_id"]))
@@ -241,7 +265,6 @@ def tao_dong(list_key: str, data: dict) -> str | None:
     }
     if cfg["has_todoi"]:
         fields[cols["todoi"]]    = str(data.get("todoi", ""))
-        fields[cols["fullname"]] = str(data.get("fullname", ""))
 
     url = f"{BASE_URL}/lists/{cfg['list_name']}/items"
     try:
@@ -265,7 +288,6 @@ def cap_nhat_dong(list_key: str, item_id: str, data: dict) -> bool:
     }
     if cfg["has_todoi"]:
         fields[cols["todoi"]]    = str(data.get("todoi", ""))
-        fields[cols["fullname"]] = str(data.get("fullname", ""))
 
     url = f"{BASE_URL}/lists/{cfg['list_name']}/items/{item_id}/fields"
     try:

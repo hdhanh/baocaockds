@@ -138,6 +138,21 @@ def api_todoi():
 
 
 # ════════════════════════════════════════════════════════════════════
+#  TỔNG QUAN
+# ════════════════════════════════════════════════════════════════════
+
+@app.route("/tongquan")
+@login_required
+def tongquan():
+    try:
+        rows = graph_api.lay_tong_quan()
+    except Exception as e:
+        flash(f"Lỗi tải tổng quan: {e}", "danger")
+        rows = []
+    return render_template("tongquan.html", rows=rows)
+
+
+# ════════════════════════════════════════════════════════════════════
 #  PHIẾU XUẤT — danh sách
 # ════════════════════════════════════════════════════════════════════
 

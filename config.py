@@ -40,7 +40,6 @@ LISTS = {
             "sophieu":     "stt",
             "date":        "ngay",
             "todoi":       "todoi",
-            "fullname":    "hovaten",
             "code":        "mack",
             "qty":         "soluong",
             "note":        "ghichu",
@@ -57,7 +56,6 @@ LIST_HANGMUC = {
 LIST_TODOI = {
     "list_name":    "todoi",
     "col_title":    "Title",
-    "col_fullname": "hovaten",
 }
 
 LIST_USERS = {
