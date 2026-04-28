@@ -313,7 +313,7 @@ def sua_xuat(sophieu):
             flash(f"⚠️ Cập nhật OK nhưng ảnh lỗi: {e}", "warning")
 
     flash(f"✅ Đã cập nhật Phiếu Xuất số {sophieu}!", "success")
-    return redirect(url_for("chitiet_xuat", sophieu=sophieu))
+    return redirect(url_for("danhsach_xuat"))
 
 
 @app.route("/xuat/dong/<item_id>/xoa", methods=["POST"])
@@ -496,7 +496,7 @@ def sua_nhap(sophieu):
             graph_api.tao_dong("nhap", data)
 
     flash(f"✅ Đã cập nhật Phiếu Nhập số {sophieu}!", "success")
-    return redirect(url_for("chitiet_nhap", sophieu=sophieu))
+    return redirect(url_for("danhsach_nhap"))
 
 
 @app.route("/nhap/dong/<item_id>/xoa", methods=["POST"])
