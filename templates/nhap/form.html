@@ -131,7 +131,7 @@ Promise.all([
   const dl = document.getElementById("hangmucList");
   dl.innerHTML = hm.map(h=>`<option value="${h.code}">${h.code} — ${h.description}</option>`).join("");
   const dl2 = document.getElementById("todoi_list");
-  dl2.innerHTML = td.map(t=>`<option value="${t.title}">${t.title}</option>`).join("");
+  dl2.innerHTML = td.map(t=>`<option value="${t.title}">${t.title}${t.fullname?' — '+t.fullname:''}</option>`).join("");
 });
 
 window.addEventListener("DOMContentLoaded", ()=>{
@@ -140,7 +140,9 @@ window.addEventListener("DOMContentLoaded", ()=>{
 });
 
 function autoFillFullname(input) {
-  // hovaten đã bỏ — không cần auto fill
+  const val = input.value.trim();
+  const td  = todois.find(t=>t.title===val);
+  document.getElementById("fullname").value = td ? td.fullname : "";
 }
 
 function autoFillDesc(input) {
